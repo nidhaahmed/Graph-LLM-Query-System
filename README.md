@@ -1,82 +1,68 @@
-# Graph LLM Query System
+# Graph-LLM Query System 🛡️📊
 
-## Overview
-The Graph LLM Query System is an intelligent, full-stack application designed to translate Natural Language questions into executable Graph queries (Cypher), visualize the database topology, and generate accurate, grounded natural-language answers derived strictly from the resulting data context.
+An intelligent graph-based system designed to unify fragmented enterprise data (Sales, Deliveries, Billing, Accounting) into an actionable context graph with an LLM-powered natural language interface.
 
-Built on the foundation of **Neo4j**, **Google Gemini GenAI**, **React**, and **Node.js**, this system specializes in auditing and exploring complex enterprise supply chain and document workflows (Sales Orders, Delivery Documents, Billing, and Accounting).
+## 🚀 Key Features & Achievements
+Developed in response to the **Forward Deployed Engineer** challenge, achieving the following:
 
-## Architecture
-The system consists of two primary layers: a TypeScript `frontend` single-page application and a TypeScript `backend` API. 
+- **Automated Graph Ingestion**: High-performance ingestion of JSONL shards into **Neo4j**, modeling complex business topologies (Orders → Deliveries → Invoices → Journal Entries).
+- **Conversational AI Interface**: AI-driven query engine using **Google Gemini Pro** to translate Natural Language into precise, read-only **Cypher** queries.
+- **Interactive Visualization**: Real-time 2D Force-Directed Graph using `react-force-graph-2d` with support for node neighbor expansion, metadata inspection, and dynamic scaling.
+- **Strict Guardrails**: Implemented dual-layer security—AI system prompts restrict domain scope, while backend logic enforces read-only Cypher assertions to prevent data mutation.
+- **Bonus Extras Included**: 
+    - 🔄 **Conversation Memory**: Historical context tracking for iterative questioning.
+    - ⚡ **Streaming UI**: Animated response generation for a premium experience.
+    - 🧐 **Root-Cause Analysis**: Advanced predicates to identify "Broken Flows" (e.g., delivered but never billed).
 
-### 1. Backend (Node.js + Express)
-The backend acts as the Orchestrator for the system processing pipeline:
-- **LLM Translation Layer (`@google/generative-ai`)**: Intercepts natural language inputs, contextualizes them using a hard-coded generic Graph Schema, and utilizes Google Gemini to output purely read-only Cypher queries. It utilizes few-shot prompting techniques to teach the LLM about business-flow topologies (e.g., "delivered but not billed" requires checking the absence of `:BILLED_IN` relationships).
-- **Execution Engine (`neo4j-driver`)**: Receives the LLM-generated Cypher, rigorously applies security assertions (denying any modifying commands like `CREATE`, `DELETE`, `MERGE`), and executes it against the remote Neo4j Graph Database.
-- **Answer Synthesizer**: Pipes the JSON output from Neo4j back into the LLM context to construct a natural-language "Answer," ensuring responses are fully grounded in accurate data without hallucinating missing records.
-- **Graph Expansion Engine**: Dedicated endpoint (`/graph/neighborhood`) resolving precise relational radii to fetch 2D coordinates and metadata required for interactive UI rendering.
+---
 
-### 2. Frontend (React + Vite)
-A highly responsive, grid-based dashboard for interactive querying:
-- **Natural Language Input & Memory**: A left-hand prompt area alongside conversation history logic mapping previous UI boundaries.
-- **Interactive Force-Directed Graph (`react-force-graph-2d`)**: Dynamically measures container dimensions via `ResizeObserver` to plot node coordinates in real-time, displaying a web of elements categorized by node label colors and connection weight. Supports click-expansion (double-click node to query neighborhood) and right-click metadata inspection.
-- **Cypher & Results Traceability**: Raw underlying Cypher logic and row-based JSON returns are visibly surfaced to the user to maintain complete system transparency.
+## 🏗️ Architecture
 
-## Domain Model (Neo4j Schema)
-The system leverages a supply chain / ERP topology.
-**Core Entities:**
-- `SalesOrder`, `DeliveryDocument`, `BillingDocument`, `JournalEntryDocument`
-- `Product`, `Customer`, `Plant`, `StorageLocation`, `Address`
+### **Tech Stack**
+- **Frontend**: React (Vite), TypeScript, vanilla CSS (layout-optimized).
+- **Backend**: Node.js, Express, TypeScript.
+- **Database**: Neo4j (Graph Database) - chosen for native relationship-first indexing.
+- **AI**: Google Gemini API (Gen AI) - utilized for Cypher generation and natural language answer grounding.
 
-**Key Business Relationship Paths:**
-- `(:SalesOrder)-[:HAS_DELIVERY]->(:DeliveryDocument)`
-- `(:DeliveryDocument)-[:BILLED_IN]->(:BillingDocument)`
-- `(:BillingDocument)-[:HAS_JOURNAL_ENTRY]->(:JournalEntryDocument)`
-- `(:Product)-[:AVAILABLE_IN_PLANT]->(:Plant)`
+### **Query Flow**
+1. **NL Input**: User asks a question (e.g., "Show me orders with no delivery").
+2. **Translation**: LLM generates Cypher based on the injected **Graph Schema**.
+3. **Validation**: Backend scripts verify Cypher for forbidden keywords (`DELETE`, `CREATE`, etc.).
+4. **Execution**: Neo4j runs the query and returns raw JSON rows.
+5. **Synthesis**: LLM constructs a natural language answer grounded **only** in the returned rows to prevent hallucinations.
+6. **Visualization**: Frontend renders the neighborhood topology of the result set.
 
-## Setup and Installation
+---
 
-### Prerequisites
-- Node.js environment (v18+)
-- Neo4j Instance (AuraDB or local Desktop)
-- Gemini API Key
+## 🛠️ Setup & Deployment
 
-### Backend Configuration
-1. Navigate to `backend/`:
+### **Deployment Links**
+- **Frontend (Vercel)**: [https://graph-llm-query-system-lime.vercel.app/](https://graph-llm-query-system-lime.vercel.app/)
+- **Backend (Render)**: [https://graph-llm-query-system-y5xo.onrender.com](https://graph-llm-query-system-y5xo.onrender.com)
+
+### **Local Setup**
+1. **Clone & Install**:
    ```bash
-   cd backend
-   npm install
+   git clone https://github.com/nidhaahmed/Graph-LLM-Query-System.git
+   cd backend && npm install
+   cd ../frontend && npm install
    ```
-2. Create `.env` file referencing your Graph DB and API credentials:
-   ```env
-   NEO4J_URI=bolt://your-neo4j-uri
-   NEO4J_USER=neo4j
-   NEO4J_PASSWORD=your_secure_password
-   GEMINI_API_KEY=your_gemini_api_key
-   GEMINI_MODEL=gemini-2.5-flash # Optional, specify preferred model
-   PORT=5000
-   ```
-3. Run Data Ingestion (initializes your Neo4j instance):
+2. **Environment**:
+   Set `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, and `GEMINI_API_KEY` in `backend/.env`.
+3. **Ingest Data**:
    ```bash
-   npm run ingest
+   cd backend && npm run ingest
    ```
-4. Start the backend development server:
+4. **Run**:
    ```bash
+   # Both directories
    npm run dev
    ```
 
-### Frontend Configuration
-1. Navigate to `frontend/`:
-   ```bash
-   cd frontend
-   npm install
-   ```
-2. Start the Vite server:
-   ```bash
-   npm run dev
-   ```
+---
 
-## Development Workflow
-The frontend makes iterative calls to the following key backend endpoints:
-- `POST /query/nl-answer` - Solves Natural Language translation, execution, and synthesis asynchronously.
-- `POST /query/cypher` - Permits exact manual Cypher statements without invoking LLM pipelines.
-- `GET /graph/neighborhood` - Given a seed `NodeKey`, computes graph arrays `[Nodes]` and `[Edges]` limit bounded to 300 to render in standard React components.
+## 🛡️ Guardrails & Security
+To ensure reliability and safety:
+- **Scope Restriction**: The system prompt explicitly instructs the LLM to reject queries about general knowledge, creative writing, or anything outside the Supply Chain domain.
+- **Syntax Enforcement**: The backend utilizes a `assertReadOnlyCypher` utility that scans for and blocks `MERGE`, `SET`, `REMOVE`, and other mutation keywords.
+- **Data Grounding**: Answers are provided strictly based on query results; if no data matches, the system returns a standard "No matching records found" response instead of guessing.
