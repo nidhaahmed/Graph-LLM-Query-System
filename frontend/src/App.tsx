@@ -108,8 +108,10 @@ export default function App() {
     return () => observer.disconnect();
   }, []);
 
+const API_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
-    fetch("http://localhost:5000/health")
+    fetch(`${API_URL}/health`)
       .then((r) => r.json())
       .then((d: Health) => setHealth(d))
       .catch((e: unknown) => setErr(String(e)));
@@ -133,7 +135,7 @@ export default function App() {
     if (!key) return;
     setGraphErr("");
     const res = await fetch(
-      `http://localhost:5000/graph/neighborhood?key=${encodeURIComponent(key)}&limit=120`,
+      `${API_URL}/graph/neighborhood?key=${encodeURIComponent(key)}&limit=120`,
     );
     const data = (await res.json()) as {
       ok: boolean;
@@ -174,7 +176,7 @@ export default function App() {
     setStreamingAnswer("");
     setGeneratedCypher("");
     try {
-      const res = await fetch("http://localhost:5000/query/cypher", {
+      const res = await fetch(`${API_URL}/query/cypher`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cypher, params: {} }),
@@ -203,7 +205,7 @@ export default function App() {
     setFinalAnswer("");
     setStreamingAnswer("");
     try {
-      const res = await fetch("http://localhost:5000/query/nl-answer", {
+      const res = await fetch(`${API_URL}/query/nl-answer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),
